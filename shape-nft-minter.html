@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Network NFT Minter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .status.disconnected {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+        }
+        
+        .status.connected {
+            background: rgba(78, 205, 196, 0.2);
+            border: 1px solid rgba(78, 205, 196, 0.4);
+        }
+        
+        .button {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .mint-form {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .mint-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .form-group input::placeholder, .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .network-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .tx-hash {
+            word-break: break-all;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🔷 Shape NFT</div>
+        <div class="subtitle">Mint your NFT on Shape Network</div>
+        
+        <div id="status" class="status disconnected">
+            Wallet not connected
+        </div>
+        
+        <button id="connectButton" class="button">Connect Wallet</button>
+        
+        <div id="mintForm" class="mint-form">
+            <div class="form-group">
+                <label for="tokenName">NFT Name:</label>
+                <input type="text" id="tokenName" placeholder="My Awesome NFT" value="Shape Test NFT">
+            </div>
+            
+            <div class="form-group">
+                <label for="tokenDescription">Description:</label>
+                <textarea id="tokenDescription" placeholder="Describe your NFT..." rows="3">A test NFT minted on Shape Network</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="tokenImage">Image URL:</label>
+                <input type="url" id="tokenImage" placeholder="https://example.com/image.png" value="https://via.placeholder.com/400x400/667eea/ffffff?text=Shape+NFT">
+            </div>
+            
+            <button id="mintButton" class="button">Mint NFT</button>
+        </div>
+        
+        <div class="network-info">
+            <strong>Shape Network (Testnet)</strong><br>
+            Chain ID: 360<br>
+            RPC: https://sepolia.shape.network<br>
+            This is a test environment - no real value
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Shape Network configuration
+        const SHAPE_NETWORK = {
+            chainId: '0x168', // 360 in hex
+            chainName: 'Shape Sepolia Testnet',
+            nativeCurrency: {
+                name: 'ETH',
+                symbol: 'ETH',
+                decimals: 18
+            },
+            rpcUrls: ['https://sepolia.shape.network'],
+            blockExplorerUrls: ['https://sepolia-explorer.shape.network']
+        };
+
+        // Simple NFT contract ABI (ERC721)
+        const NFT_ABI = [
+            "function mint(address to, string memory tokenURI) public returns (uint256)",
+            "function name() public view returns (string)",
+            "function symbol() public view returns (string)",
+            "function totalSupply() public view returns (uint256)"
+        ];
+
+        let web3, account, contract;
+        const contractAddress = "0x0000000000000000000000000000000000000000"; // Placeholder - you'll need to deploy a contract
+
+        // Initialize
+        document.getElementById('connectButton').addEventListener('click', connectWallet);
+        document.getElementById('mintButton').addEventListener('click', mintNFT);
+
+        async function connectWallet() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    // Request account access
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    account = accounts[0];
+                    
+                    // Switch to Shape Network
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: SHAPE_NETWORK.chainId }],
+                        });
+                    } catch (switchError) {
+                        // This error code indicates that the chain has not been added to MetaMask
+                        if (switchError.code === 4902) {
+                            try {
+                                await window.ethereum.request({
+                                    method: 'wallet_addEthereumChain',
+                                    params: [SHAPE_NETWORK],
+                                });
+                            } catch (addError) {
+                                console.error('Failed to add network:', addError);
+                                updateStatus('Failed to add Shape Network', 'disconnected');
+                                return;
+                            }
+                        } else {
+                            console.error('Failed to switch network:', switchError);
+                            updateStatus('Failed to switch to Shape Network', 'disconnected');
+                            return;
+                        }
+                    }
+                    
+                    // Initialize web3
+                    web3 = new ethers.providers.Web3Provider(window.ethereum);
+                    
+                    updateStatus(`Connected: ${account.slice(0, 6)}...${account.slice(-4)}`, 'connected');
+                    document.getElementById('connectButton').textContent = 'Connected';
+                    document.getElementById('connectButton').disabled = true;
+                    document.getElementById('mintForm').classList.add('active');
+                    
+                } catch (error) {
+                    console.error('Failed to connect wallet:', error);
+                    updateStatus('Failed to connect wallet', 'disconnected');
+                }
+            } else {
+                updateStatus('Please install MetaMask or another Web3 wallet', 'disconnected');
+            }
+        }
+
+        async function mintNFT() {
+            if (!account) {
+                updateStatus('Please connect your wallet first', 'disconnected');
+                return;
+            }
+
+            const mintButton = document.getElementById('mintButton');
+            const originalText = mintButton.textContent;
+            
+            try {
+                mintButton.innerHTML = '<span class="loading"></span>Minting...';
+                mintButton.disabled = true;
+
+                const name = document.getElementById('tokenName').value;
+                const description = document.getElementById('tokenDescription').value;
+                const image = document.getElementById('tokenImage').value;
+
+                // Create metadata JSON
+                const metadata = {
+                    name: name,
+                    description: description,
+                    image: image,
+                    attributes: [
+                        {
+                            "trait_type": "Network",
+                            "value": "Shape"
+                        },
+                        {
+                            "trait_type": "Type",
+                            "value": "Test NFT"
+                        }
+                    ]
+                };
+
+                // For demo purposes, we'll simulate the minting process
+                // In a real implementation, you would:
+                // 1. Upload metadata to IPFS
+                // 2. Call the mint function on your deployed contract
+
+                showResult('🚨 Demo Mode: Contract Deployment Required', `
+                    <p>This is a demonstration of the minting interface. To actually mint NFTs, you need to:</p>
+                    <ol style="text-align: left; margin: 15px 0;">
+                        <li>Deploy an ERC721 contract on Shape Network</li>
+                        <li>Update the contract address in the code</li>
+                        <li>Upload metadata to IPFS or decentralized storage</li>
+                    </ol>
+                    <p><strong>Metadata Preview:</strong></p>
+                    <pre style="text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; font-size: 0.8rem;">${JSON.stringify(metadata, null, 2)}</pre>
+                `);
+
+                // Simulate transaction
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                showResult('✅ Simulation Complete', 'NFT minting interface is working! Deploy a contract to mint real NFTs.');
+
+            } catch (error) {
+                console.error('Minting failed:', error);
+                showResult('❌ Minting Failed', error.message);
+            } finally {
+                mintButton.textContent = originalText;
+                mintButton.disabled = false;
+            }
+        }
+
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function showResult(title, message) {
+            const result = document.getElementById('result');
+            result.innerHTML = `
+                <div style="margin-top: 20px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; text-align: left;">
+                    <h3 style="margin-bottom: 10px;">${title}</h3>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+
+        // Check if wallet is already connected
+        window.addEventListener('load', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) {
+                    account = accounts[0];
+                    web3 = new ethers.providers.Web3Provider(window.ethereum);
+                    updateStatus(`Connected: ${account.slice(0, 6)}...${account.slice(-4)}`, 'connected');
+                    document.getElementById('connectButton').textContent = 'Connected';
+                    document.getElementById('connectButton').disabled = true;
+                    document.getElementById('mintForm').classList.add('active');
+                }
+            }
+        });
+    </script>
+    
+    <!-- Include ethers.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+</body>
+</html>
