@@ -13,12 +13,12 @@
         
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: white;
+            color: black;
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
@@ -456,6 +456,17 @@
 
         // Check if wallet is already connected
         window.addEventListener('load', async () => {
+            // Animate the diamond inside the container
+            const diamondElement = document.getElementById('diamondAnimation');
+            if (diamondElement) {
+                let hue = 0;
+                setInterval(() => {
+                    hue = (hue + 5) % 360;
+                    diamondElement.style.background = `linear-gradient(45deg, hsl(${hue}, 70%, 60%), hsl(${(hue + 120) % 360}, 70%, 60%))`;
+                    diamondElement.style.transform = `scale(${1 + Math.sin(hue * Math.PI / 180) * 0.1})`;
+                }, 100);
+            }
+            
             if (typeof window.ethereum !== 'undefined') {
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (accounts.length > 0) {
