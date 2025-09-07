@@ -162,70 +162,76 @@
             align-items: center;
             height: 120px;
             margin: 15px 0;
-            perspective: 1000px;
+            perspective: 800px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
         }
         
         .diamond {
-            width: 80px;
-            height: 80px;
+            width: 60px;
+            height: 60px;
             position: relative;
             transform-style: preserve-3d;
-            animation: rotateDiamond 4s linear infinite;
+            animation: rotateDiamond 6s linear infinite;
         }
         
         .diamond-face {
             position: absolute;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #2dd4bf 100%);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            opacity: 0.8;
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
         }
         
         .diamond-face.front {
-            transform: translateZ(40px);
-            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #2dd4bf 100%);
-            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, #4ecdc4 0%, #2dd4bf 100%);
+            transform: translateZ(30px);
+            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.5);
         }
         
         .diamond-face.back {
-            transform: rotateY(180deg) translateZ(40px);
-            background: linear-gradient(135deg, #2dd4bf 0%, #4ecdc4 50%, #44a08d 100%);
+            background: linear-gradient(135deg, #2dd4bf 0%, #4ecdc4 100%);
+            transform: rotateY(180deg) translateZ(30px);
         }
         
         .diamond-face.top {
-            transform: rotateX(90deg) translateZ(40px);
-            background: linear-gradient(135deg, #44a08d 0%, #2dd4bf 50%, #4ecdc4 100%);
-            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.4);
+            background: linear-gradient(135deg, #44a08d 0%, #4ecdc4 100%);
+            transform: rotateX(90deg) translateZ(30px);
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
         }
         
         .diamond-face.bottom {
-            transform: rotateX(-90deg) translateZ(40px);
-            background: linear-gradient(135deg, #2dd4bf 0%, #44a08d 50%, #4ecdc4 100%);
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            transform: rotateX(-90deg) translateZ(30px);
         }
         
         .diamond-face.left {
-            transform: rotateY(-90deg) translateZ(40px);
-            background: linear-gradient(135deg, #4ecdc4 0%, #2dd4bf 50%, #44a08d 100%);
-            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #2dd4bf 0%, #44a08d 100%);
+            transform: rotateY(-90deg) translateZ(30px);
         }
         
         .diamond-face.right {
-            transform: rotateY(90deg) translateZ(40px);
-            background: linear-gradient(135deg, #44a08d 0%, #4ecdc4 50%, #2dd4bf 100%);
-            box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.2);
+            background: linear-gradient(135deg, #44a08d 0%, #2dd4bf 100%);
+            transform: rotateY(90deg) translateZ(30px);
         }
         
         @keyframes rotateDiamond {
-            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-            25% { transform: rotateX(90deg) rotateY(90deg) rotateZ(0deg); }
-            50% { transform: rotateX(180deg) rotateY(180deg) rotateZ(90deg); }
-            75% { transform: rotateX(270deg) rotateY(270deg) rotateZ(180deg); }
-            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(270deg); }
+            0% { transform: rotateX(0deg) rotateY(0deg); }
+            25% { transform: rotateX(45deg) rotateY(90deg); }
+            50% { transform: rotateX(90deg) rotateY(180deg); }
+            75% { transform: rotateX(135deg) rotateY(270deg); }
+            100% { transform: rotateX(180deg) rotateY(360deg); }
         }
         
-        .diamond-container:hover .diamond {
-            animation-duration: 1s;
+        .diamond::before {
+            content: "💎";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
         }
     </style>
 </head>
