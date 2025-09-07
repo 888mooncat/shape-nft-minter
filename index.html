@@ -280,11 +280,6 @@
 
         async function disconnectWallet() {
             try {
-                // Attempt to properly disconnect from supported wallets
-                if (window.ethereum && window.ethereum.disconnect) {
-                    await window.ethereum.disconnect();
-                }
-                
                 // Try to revoke permissions (MetaMask and compatible wallets)
                 if (window.ethereum && window.ethereum.request) {
                     try {
@@ -295,19 +290,6 @@
                     } catch (revokeError) {
                         // This method might not be supported by all wallets
                         console.log("Revoke permissions not supported:", revokeError.message);
-                    }
-                }
-                
-                // For wallets that support wallet_requestPermissions, clear them
-                if (window.ethereum && window.ethereum.request) {
-                    try {
-                        await window.ethereum.request({
-                            method: "wallet_requestPermissions",
-                            params: [{ eth_accounts: {} }]
-                        });
-                    } catch (permError) {
-                        // Ignore if not supported
-                        console.log("Permission request not supported:", permError.message);
                     }
                 }
                 
