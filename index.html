@@ -19,24 +19,29 @@
             justify-content: center;
             align-items: center;
             color: white;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         
         .container {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 40px;
+            padding: 25px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 500px;
+            max-width: 450px;
             width: 100%;
             text-align: center;
+            max-height: 95vh;
+            overflow-y: auto;
         }
         
         .logo {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -44,16 +49,17 @@
         }
         
         .subtitle {
-            font-size: 1.1rem;
-            margin-bottom: 30px;
+            font-size: 1rem;
+            margin-bottom: 20px;
             opacity: 0.8;
         }
         
         .status {
-            margin: 20px 0;
-            padding: 15px;
+            margin: 15px 0;
+            padding: 12px;
             border-radius: 10px;
             font-weight: 500;
+            font-size: 0.9rem;
         }
         
         .status.disconnected {
@@ -70,13 +76,13 @@
             background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
             border: none;
             color: white;
-            padding: 15px 30px;
-            font-size: 1rem;
+            padding: 12px 25px;
+            font-size: 0.9rem;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 10px;
+            margin: 8px;
             display: inline-block;
             text-decoration: none;
         }
@@ -93,7 +99,7 @@
         }
         
         .mint-form {
-            margin-top: 30px;
+            margin-top: 20px;
             display: none;
         }
         
@@ -102,24 +108,25 @@
         }
         
         .form-group {
-            margin: 20px 0;
+            margin: 15px 0;
             text-align: left;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 500;
+            font-size: 0.9rem;
         }
         
         .form-group input, .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
+            border-radius: 8px;
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
         
         .form-group input::placeholder, .form-group textarea::placeholder {
@@ -142,20 +149,10 @@
         }
         
         .network-info {
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 12px;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            font-size: 0.9rem;
-        }
-        
-        .tx-hash {
-            word-break: break-all;
-            font-family: monospace;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 8px;
-            border-radius: 5px;
-            margin-top: 8px;
+            border-radius: 8px;
             font-size: 0.8rem;
         }
     </style>
@@ -170,6 +167,7 @@
         </div>
         
         <button id="connectButton" class="button">Connect Wallet</button>
+        <button id="disconnectButton" class="button" style="display: none; background: linear-gradient(45deg, #e74c3c, #c0392b); margin-top: 10px;">Disconnect</button>
         
         <div id="mintForm" class="mint-form">
             <div class="form-group">
@@ -191,10 +189,8 @@
         </div>
         
         <div class="network-info">
-            <strong>Shape Network (Testnet)</strong><br>
-            Chain ID: 360<br>
-            RPC: https://sepolia.shape.network<br>
-            This is a test environment - no real value
+            <strong>🔷 Shape Network</strong><br>
+            Ultra-low fees • Fast transactions
         </div>
         
         <div id="result"></div>
@@ -204,29 +200,32 @@
         // Shape Network configuration
         const SHAPE_NETWORK = {
             chainId: '0x168', // 360 in hex
-            chainName: 'Shape Sepolia Testnet',
+            chainName: 'Shape Mainnet',
             nativeCurrency: {
                 name: 'ETH',
                 symbol: 'ETH',
                 decimals: 18
             },
-            rpcUrls: ['https://sepolia.shape.network'],
-            blockExplorerUrls: ['https://sepolia-explorer.shape.network']
+            rpcUrls: ['https://mainnet.shape.network'],
+            blockExplorerUrls: ['https://explorer.shape.network']
         };
 
-        // Simple NFT contract ABI (ERC721)
+        // Diamond Collection contract ABI (ERC721)
         const NFT_ABI = [
-            "function mint(address to, string memory tokenURI) public returns (uint256)",
+            "function mintDiamond() public",
+            "function hasAddressMinted(address user) public view returns (bool)",
+            "function totalSupply() public view returns (uint256)",
             "function name() public view returns (string)",
             "function symbol() public view returns (string)",
-            "function totalSupply() public view returns (uint256)"
+            "function tokenURI(uint256 tokenId) public view returns (string)"
         ];
 
         let web3, account, contract;
-        const contractAddress = "0x0000000000000000000000000000000000000000"; // Placeholder - you'll need to deploy a contract
+        const contractAddress = "0x684325b47D05D0d1f44dCdE8dff47D2FcdABA7c2"; // Diamond Collection Contract
 
         // Initialize
         document.getElementById('connectButton').addEventListener('click', connectWallet);
+        document.getElementById('disconnectButton').addEventListener('click', disconnectWallet);
         document.getElementById('mintButton').addEventListener('click', mintNFT);
 
         async function connectWallet() {
@@ -266,8 +265,8 @@
                     web3 = new ethers.providers.Web3Provider(window.ethereum);
                     
                     updateStatus(`Connected: ${account.slice(0, 6)}...${account.slice(-4)}`, 'connected');
-                    document.getElementById('connectButton').textContent = 'Connected';
-                    document.getElementById('connectButton').disabled = true;
+                    document.getElementById('connectButton').style.display = 'none';
+                    document.getElementById('disconnectButton').style.display = 'inline-block';
                     document.getElementById('mintForm').classList.add('active');
                     
                 } catch (error) {
@@ -277,6 +276,18 @@
             } else {
                 updateStatus('Please install MetaMask or another Web3 wallet', 'disconnected');
             }
+        }
+
+        function disconnectWallet() {
+            account = null;
+            web3 = null;
+            contract = null;
+            
+            updateStatus('Wallet disconnected', 'disconnected');
+            document.getElementById('connectButton').style.display = 'inline-block';
+            document.getElementById('disconnectButton').style.display = 'none';
+            document.getElementById('mintForm').classList.remove('active');
+            document.getElementById('result').innerHTML = '';
         }
 
         async function mintNFT() {
@@ -301,17 +312,16 @@
                 // Check if user has already minted
                 const hasAlreadyMinted = await contract.hasAddressMinted(account);
                 if (hasAlreadyMinted) {
-                    showResult('❌ Already Minted', 'You have already minted your Diamond NFT. Each wallet can only mint once.');
+                    showResult('💎 You Already Own a Diamond!', 'Great news! You already have your unique Diamond NFT in your collection. Each wallet can only mint one Diamond to keep them special and exclusive.');
                     return;
                 }
 
                 // Call the mintDiamond function
                 const tx = await contract.mintDiamond();
                 
-                showResult('⏳ Transaction Submitted', `
-                    <p>Your Diamond is being minted!</p>
-                    <div class="tx-hash">Tx: ${tx.hash}</div>
-                    <p>Waiting for confirmation...</p>
+                showResult('⏳ Minting in Progress', `
+                    <p>Your Diamond is being created!</p>
+                    <p>Please wait while we confirm your transaction...</p>
                 `);
 
                 // Wait for transaction confirmation
@@ -324,12 +334,10 @@
                 showResult('✅ Diamond Minted!', `
                     <p><strong>Congratulations! 💎</strong></p>
                     <p>Your Diamond NFT has been minted successfully!</p>
-                    ${tokenId ? `<p><strong>Token ID:</strong> #${tokenId}</p>` : ''}
-                    <div class="tx-hash">
-                        <a href="https://explorer.shape.network/tx/${tx.hash}" target="_blank" style="color: #4ecdc4;">
-                            View on Shape Explorer
-                        </a>
-                    </div>
+                    ${tokenId ? `<p><strong>Diamond #${tokenId}</strong></p>` : ''}
+                    <p><a href="https://explorer.shape.network/tx/${tx.hash}" target="_blank" style="color: #4ecdc4; text-decoration: none;">
+                        🔍 View Transaction Details
+                    </a></p>
                 `);
 
             } catch (error) {
