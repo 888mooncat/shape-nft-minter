@@ -278,7 +278,45 @@
             }
         }
 
-        function disconnectWallet() {
+        async function disconnectWallet() {
+            try {
+                // Attempt to properly disconnect from supported wallets
+                if (window.ethereum && window.ethereum.disconnect) {
+                    await window.ethereum.disconnect();
+                }
+                
+                // Try to revoke permissions (MetaMask and compatible wallets)
+                if (window.ethereum && window.ethereum.request) {
+                    try {
+                        await window.ethereum.request({
+                            method: "wallet_revokePermissions",
+                            params: [{ eth_accounts: {} }]
+                        });
+                    } catch (revokeError) {
+                        // This method might not be supported by all wallets
+                        console.log("Revoke permissions not supported:", revokeError.message);
+                    }
+                }
+                
+                // For wallets that support wallet_requestPermissions, clear them
+                if (window.ethereum && window.ethereum.request) {
+                    try {
+                        await window.ethereum.request({
+                            method: "wallet_requestPermissions",
+                            params: [{ eth_accounts: {} }]
+                        });
+                    } catch (permError) {
+                        // Ignore if not supported
+                        console.log("Permission request not supported:", permError.message);
+                    }
+                }
+                
+            } catch (error) {
+                console.log("Wallet disconnect not fully supported:", error.message);
+                // Continue with local cleanup even if wallet disconnect fails
+            }
+            
+            // Clear local state regardless of wallet disconnect success
             account = null;
             web3 = null;
             contract = null;
@@ -288,6 +326,21 @@
             document.getElementById('disconnectButton').style.display = 'none';
             document.getElementById('mintForm').classList.remove('active');
             document.getElementById('result').innerHTML = '';
+            
+            // Show helpful message about true disconnection
+            showResult('🔓 Wallet Disconnected', `
+                <p><strong>Local session cleared!</strong></p>
+                <p>If you want to connect a different wallet account:</p>
+                <ol style="text-align: left; margin-left: 20px; margin-top: 10px;">
+                    <li>Open your wallet (MetaMask)</li>
+                    <li>Switch to the desired account</li>
+                    <li>Then click "Connect Wallet" again</li>
+                </ol>
+                <p style="margin-top: 10px; font-size: 0.8em; opacity: 0.8;">
+                    Note: Some wallets may remember this site's connection. 
+                    The steps above ensure you can select a different account.
+                </p>
+            `);
         }
 
         async function mintNFT() {
